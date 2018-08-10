@@ -11,27 +11,32 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import com.android.minlib.samplesimplewidget.smart.Smart;
-import com.android.minlib.samplesimplewidget.smart.TestBean;
+import com.android.minlib.samplesimplewidget.smart.SmartBean;
+import com.android.minlib.samplesimplewidget.smart.SmartCallback;
 import com.android.minlib.smarthttp.callback.FileCallback;
 import com.android.minlib.smarthttp.callback.StringCallback;
 import com.android.minlib.smarthttp.exception.ApiException;
+import com.android.minlib.smarthttp.manager.IRequestManager;
+import com.android.minlib.smarthttp.okhttp.RequestCall;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
 
-public class MainActivity extends AppCompatActivity implements AdapterView.OnItemClickListener{
-
-    public static Application application;
+public class MainActivity extends AppCompatActivity implements IRequestManager<RequestCall>,AdapterView.OnItemClickListener{
 
     ListView mListView;
     private static final String[] strs =
             {
-                    "NetRequest",
+                    "Wheather GET",
             };
+
+    private BlockingQueue<RequestCall> mCallBlockingQueue = new LinkedBlockingDeque<>();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        application = getApplication();
         mListView = new ListView(this);
         mListView.setAdapter(new ArrayAdapter<String>(this,
                 android.R.layout.simple_list_item_1, strs));
@@ -45,43 +50,67 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         switch(position){
             case 0:
-                netPost();
+                wheatherGet();
                 break;
         }
     }
 
-    private void netPost(){
-        HashMap<String,String> map = new HashMap<>();
-        map.put("name","huangshunbo");
-        Smart.post("common/test", map, new StringCallback<TestBean>() {
+    private void wheatherGet(){
+        HashMap<String,String> params = new HashMap<>();
+        params.put("city","深圳");
+        Smart.wheatherGet(params).buildRequest().execute(new SmartCallback<DataBean>() {
+
             @Override
-            public void onSuccess(TestBean o) {
-                Log.e("hsb",""+o.getName());
+            public void onSuccess(DataBean bean) {
+                Log.d("hsb","onSuccess \n" + bean.toString());
             }
 
             @Override
             public void onFailure(ApiException e) {
-                Log.e("hsb",e.getUrl() + e.getMessage());
+                Log.d("hsb","onFailure \n" + e.getDetailMessage());
             }
         });
     }
 
-    private void netRequest() {
-        Smart.post("", null, new FileCallback(Environment.getExternalStorageDirectory().getAbsolutePath(),"testfile") {
-            @Override
-            public void onProgress(float progress, float total) {
-                Log.d("MainActivity","progress = "+progress + " total = " + total);
-            }
+    @Override
+    protected void onPause() {
+        super.onPause();
+        removeAllCalls();
+    }
 
-            @Override
-            public void onSuccess(File file) {
-                Log.d("MainActivity","onSuccess");
-            }
+    @Override
+    public void addCalls(RequestCall call) {
+        //call.getCall() == null 同样加入，重新加载会重新生成call
+        if (call != null && mCallBlockingQueue != null && !mCallBlockingQueue.contains(call)) {
+            mCallBlockingQueue.add(call);
+        }
+    }
 
-            @Override
-            public void onFailure(ApiException e) {
-                Log.d("MainActivity","onFailure");
+    @Override
+    public void removeCall(RequestCall call) {
+        if (mCallBlockingQueue != null) {
+            synchronized (mCallBlockingQueue) {
+                if (mCallBlockingQueue != null) {
+                    mCallBlockingQueue.remove(call);
+                }
             }
-        });
+        }
+    }
+
+    @Override
+    public void removeAllCalls() {
+        if (mCallBlockingQueue != null) {
+            synchronized (mCallBlockingQueue) {
+                if (mCallBlockingQueue != null) {
+                    for (RequestCall requestCall : mCallBlockingQueue) {
+                        if (requestCall != null && requestCall.getCall() != null) {
+                            requestCall.getCall().cancel();
+                        }
+                    }
+                    mCallBlockingQueue.clear();
+                    mCallBlockingQueue = null;
+                }
+            }
+        }
     }
 }

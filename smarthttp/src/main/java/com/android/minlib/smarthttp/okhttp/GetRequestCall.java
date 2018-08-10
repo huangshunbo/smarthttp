@@ -8,17 +8,17 @@ import java.util.LinkedHashMap;
 
 import okhttp3.Request;
 
-public class GetRequest extends SmartRequest {
+public class GetRequestCall extends RequestCall {
 
     private LinkedHashMap<String, String> requestParams = new LinkedHashMap();
 
-    public GetRequest(String url, @NonNull SmartOkhttp smartOkhttp) {
-        super(url, smartOkhttp);
+    public GetRequestCall(String url) {
+        super(url);
     }
 
     @Override
     protected void buildReuestContent(Request.Builder builder) {
-        url = handleGetUrl(url,requestParams);
+        mUrl = handleGetUrl(mUrl,requestParams);
     }
 
     @Override
@@ -26,14 +26,14 @@ public class GetRequest extends SmartRequest {
         return null;
     }
 
-    public SmartRequest setRequestParams(HashMap<String, String> requestParams) {
+    public GetRequestCall setRequestParams(HashMap<String, String> requestParams) {
         this.requestParams.clear();
         this.requestParams.putAll(requestParams);
         return this;
     }
 
 
-    public static String handleGetUrl(String url, HashMap<String, String> params) {
+    private static String handleGetUrl(String url, HashMap<String, String> params) {
         // 添加url参数
         if (params != null && params.size() > 0) {
             Iterator<String> it = params.keySet().iterator();

@@ -14,31 +14,31 @@ import okhttp3.MultipartBody;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 
-public class PostRequest extends SmartRequest {
+public class PostRequestCall extends RequestCall {
     //请求方式：json字符串、key-value表单、文件+key-value表单
     private String requestJson;
     private LinkedHashMap<String, String> requestParams = new LinkedHashMap();
     private LinkedHashMap<String, File> requestFiles = new LinkedHashMap();
     private String requestBody = "";
 
-    public PostRequest(String url, @NonNull SmartOkhttp smartOkhttp) {
-        super(url, smartOkhttp);
+    public PostRequestCall(String url) {
+        super(url);
     }
 
-    public SmartRequest setRequestJson(String requestJson) {
-        this.requestJson = SmartHttp.getCryptionStrategy().encrypt(requestJson);
+    public PostRequestCall setRequestJson(String requestJson) {
+        this.requestJson = requestJson;
         return this;
     }
 
-    public SmartRequest setRequestParams(HashMap<String, String> requestParams) {
+    public PostRequestCall setRequestParams(HashMap<String, String> requestParams) {
         this.requestParams.clear();
-        this.requestParams.putAll(SmartHttp.getCryptionStrategy().encrypt(requestParams));
+        this.requestParams.putAll(requestParams);
         return this;
     }
 
-    public SmartRequest setFile(HashMap<String, File> requestFiles, HashMap<String, String> requestParams) {
+    public PostRequestCall setFile(HashMap<String, File> requestFiles, HashMap<String, String> requestParams) {
         this.requestParams.clear();
-        this.requestParams.putAll(SmartHttp.getCryptionStrategy().encrypt(requestParams,requestFiles));
+        this.requestParams.putAll(requestParams);
         this.requestFiles.clear();
         this.requestFiles.putAll(requestFiles);
         return this;
@@ -50,6 +50,7 @@ public class PostRequest extends SmartRequest {
      * <br> Author:      huangshunbo
      * <br> Date:        2018/5/2 10:34
      */
+    @Override
     protected void buildReuestContent(Request.Builder requestBuild) {
         //构建 json字符串
         if (!TextUtils.isEmpty(requestJson)) {
@@ -81,7 +82,7 @@ public class PostRequest extends SmartRequest {
             while (var2.hasNext()) {
                 String key = (String) var2.next();
                 File file = this.requestFiles.get(key);
-                multipartBody.addFormDataPart(key, file.getName(), RequestBody.create(MediaType.parse("file/*"), file));
+                multipartBody.addPart(RequestBody.create(MediaType.parse("file/*"), file));
             }
             requestBody = requestFiles.toString() + "\n" + requestParams.toString();
         }

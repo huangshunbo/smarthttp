@@ -7,85 +7,85 @@ import android.net.NetworkInfo;
 import android.os.Handler;
 import android.os.Looper;
 
-import com.android.minlib.smarthttp.strategy.DefaultCryptionStrategy;
-import com.android.minlib.smarthttp.strategy.ICryptionStrategy;
-import com.android.minlib.smarthttp.strategy.IURLStrategy;
-import com.android.minlib.smarthttp.strategy.URLStrategy;
-
-import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
+import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 
 public class SmartHttp {
 
     private static Context mContext;
-    private SmartOkhttp smartOkhttp = new SmartOkhttp();
 
     private static Handler mainHandler = new Handler(Looper.getMainLooper());
+    private static OkHttpClient.Builder mBuilder;
 
-    private HashMap<String,String> headers = new HashMap<>();
-    private int cacheTime = 1000 * 60 * 60;
+    private static HashMap<String,String> mHeaders = new HashMap<>();
 
-    private URLStrategy urlStrategy = new URLStrategy();
+    private static List<Interceptor> interceptors = new ArrayList<>();
+    private static List<Interceptor> networkInterceptors = new ArrayList<>();
 
-    private static ICryptionStrategy iCryptionStrategy = new DefaultCryptionStrategy();
-
-    public SmartHttp(Application application) {
-        this.mContext = application;
+    public static void init(Application application) {
+        mContext = application;
     }
 
-    public SmartHttp(Application application,ICryptionStrategy iCryptionStrategy) {
-        this.mContext = application;
-        this.iCryptionStrategy = iCryptionStrategy;
+    public static void initBuilder(OkHttpClient.Builder builder) {
+        mBuilder = builder;
     }
 
-    public PostRequest post(String methodName){
-        PostRequest postRequest = new PostRequest(urlStrategy.generateUrl(methodName),smartOkhttp);
-        postRequest.setHeaders(headers);
-        postRequest.setCacheTime(cacheTime);
+    public static void setHeaders(HashMap<String, String> headers) {
+        mHeaders = headers;
+    }
+
+    public static void addInterceptor(Interceptor interceptor){
+        interceptors.add(interceptor);
+    }
+
+    public static void addNetworkInterceptor(Interceptor interceptor){
+        networkInterceptors.add(interceptor);
+    }
+
+
+    protected static OkHttpClient.Builder getBuilder() {
+        return mBuilder;
+    }
+
+
+    public static PostRequestCall post(String url){
+        PostRequestCall postRequest = new PostRequestCall(url);
+        postRequest.setHeaders(mHeaders);
+        if(interceptors.size() > 0){
+            for(Interceptor interceptor : interceptors){
+                postRequest.getBuilder().addInterceptor(interceptor);
+            }
+        }
+        if(networkInterceptors.size() > 0){
+            for (Interceptor interceptor : networkInterceptors){
+                postRequest.getBuilder().addNetworkInterceptor(interceptor);
+            }
+        }
+
         return postRequest;
     }
 
-    public GetRequest get(String methodName){
-        GetRequest getRequest = new GetRequest(urlStrategy.generateUrl(methodName),smartOkhttp);
-        getRequest.setHeaders(headers);
-        getRequest.setCacheTime(cacheTime);
+    public static GetRequestCall get(String url){
+        GetRequestCall getRequest = new GetRequestCall(url);
+        getRequest.setHeaders(mHeaders);
+        if(interceptors.size() > 0){
+            for(Interceptor interceptor : interceptors){
+                getRequest.getBuilder().addInterceptor(interceptor);
+            }
+        }
+        if(networkInterceptors.size() > 0){
+            for (Interceptor interceptor : networkInterceptors){
+                getRequest.getBuilder().addNetworkInterceptor(interceptor);
+            }
+        }
         return getRequest;
     }
 
-    public void setHeaders(HashMap headers){
-        this.headers = headers;
-    }
-
-    public void setCacheTime(int time){
-        this.cacheTime = time;
-    }
-
-    public void setOkHttpClient(OkHttpClient okHttpClient) {
-        smartOkhttp.setOkHttpClient(okHttpClient);
-    }
-
-    public void setReadTimeOut(int readTimeOut) {
-        smartOkhttp.setReadTimeOut(readTimeOut);
-    }
-
-    protected void setConnectTimeOut(int connectTimeOut) {
-        smartOkhttp.setConnectTimeOut(connectTimeOut);
-    }
-
-    protected void setWriteTimeOut(int writeTimeOut) {
-        smartOkhttp.setWriteTimeOut(writeTimeOut);
-    }
-
-    protected void setCertificates(InputStream... certificates){
-        smartOkhttp.setCertificates(certificates);
-    }
-
-    public void setURLStrategy(IURLStrategy iurlStrategy){
-        urlStrategy.setIurlStrategy(iurlStrategy);
-    }
-    public static boolean isNetWorkAvailable() {
+    protected static boolean isNetWorkAvailable() {
         if( mContext == null) {
             throw new IllegalArgumentException("Context is null !!!");
         } else {
@@ -99,10 +99,6 @@ public class SmartHttp {
 
             return false;
         }
-    }
-
-    public static ICryptionStrategy getCryptionStrategy(){
-        return iCryptionStrategy;
     }
 
     public static void runOnUIThread(Runnable runnable){

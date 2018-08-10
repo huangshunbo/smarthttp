@@ -31,13 +31,8 @@ public class ApiException extends Exception{
         this.code = code;
         this.message = message;
     }
-    public ApiException(int code, String message,String url) {
-        super(message);
-        this.code = code;
-        this.message = message;
-        this.url = url;
-    }
-    public ApiException(int code,Throwable throwable){
+
+    public ApiException(int code, Throwable throwable){
         super(throwable);
         this.code = code;
         this.message = throwable.getMessage();
@@ -78,8 +73,13 @@ public class ApiException extends Exception{
         this.code = code;
     }
 
+    @Override
     public String getMessage() {
         return message;
+    }
+
+    public String getDetailMessage(){
+        return super.getMessage();
     }
 
     public void setMessage(String message) {

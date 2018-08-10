@@ -9,7 +9,7 @@ import java.io.InputStream;
 
 import okhttp3.Response;
 
-public abstract class FileCallback extends AbstractCallBack<File> {
+public abstract class FileCallback extends AbstractCallback<File> {
     private String mSaveFileDir;
     private String mSaveFileName;
 
@@ -46,6 +46,7 @@ public abstract class FileCallback extends AbstractCallBack<File> {
                 final float newProgress = (float)sum * 1.0F / (float)total;
                 if ((int)(100.0F * newProgress) - (int)(100.0F * lastProgress) > 1) {
                     SmartHttp.runOnUIThread(new Runnable() {
+                        @Override
                         public void run() {
                             FileCallback.this.onProgress(newProgress, total);
                         }

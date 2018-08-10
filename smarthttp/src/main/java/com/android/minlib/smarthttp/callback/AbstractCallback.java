@@ -6,10 +6,7 @@ import java.io.IOException;
 
 import okhttp3.Response;
 
-public abstract class AbstractCallBack<T> {
-    public String url;
-    public String request;
-    public String response;
+public abstract class AbstractCallback<T> {
 
     public abstract void onSuccess(T t);
 

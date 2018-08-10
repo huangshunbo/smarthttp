@@ -1,43 +1,29 @@
 package com.android.minlib.samplesimplewidget.smart;
 
-import com.android.minlib.samplesimplewidget.MainActivity;
+import com.android.minlib.samplesimplewidget.BaseApplication;
+import com.android.minlib.smarthttp.okhttp.GetRequestCall;
+import com.android.minlib.smarthttp.okhttp.PostRequestCall;
+import com.android.minlib.smarthttp.okhttp.RequestCall;
 import com.android.minlib.smarthttp.okhttp.SmartHttp;
-import com.android.minlib.smarthttp.callback.AbstractCallBack;
-import com.android.minlib.smarthttp.strategy.IURLStrategy;
-import com.google.gson.Gson;
 
 import java.util.HashMap;
+import java.util.List;
 
-//加解密
 public class Smart {
 
-    private static final SmartHttp smartHttp = new SmartHttp(MainActivity.application);
-    static  {
-        smartHttp.setCacheTime(1000 * 60 * 60);
-        smartHttp.setHeaders(new HashMap());
-        smartHttp.setURLStrategy(new IURLStrategy() {
-            @Override
-            public boolean isHttps() {
-                return false;
-            }
-
-            @Override
-            public String getDomains() {
-                return "result.eolinker.com/w1dt8wI1fbd6f47eb994a74afd0434841df9136b52d1586?uri=/";
-//                return "imtt.dd.qq.com/16891/5F46E5DD09F7478B7C1B96EEA48CA221.apk";
-//                return "imtt.dd.qq.com/16891/77FCEF50B7D08DC3322DDC2F1DF54BAF.apk";
-                }
-
-        });
-
+    static {
+        SmartHttp.init(BaseApplication.application);
     }
 
-    public static void post(String methodName, HashMap<String, String> params, AbstractCallBack abstractCallBack) {
-        String paramStr = params != null ? new Gson().toJson(params) : "";
-        smartHttp.post(methodName)
-                .setRequestJson(paramStr)
-                .buildRequest()
-                .execute(abstractCallBack);
+    public static RequestCall orderPost(String method, HashMap<String,String> params){
+        return SmartHttp.post(URLConstants.generateOrderUrl(method))
+                .setRequestParams(params)
+                .buildRequestWithCache();
+    }
 
+    public static RequestCall wheatherGet(HashMap<String,String> params){
+        return SmartHttp.get(URLConstants.generateWheatherUrl(""))//在【URLConstants】中做URL处理
+                .setRequestParams(params)//可以在这里加入加密的环节,将参数进行加密
+                .buildRequestWithCache(100);//支持设置是否缓存及缓存时间
     }
 }

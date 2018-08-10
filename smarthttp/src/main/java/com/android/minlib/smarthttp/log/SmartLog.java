@@ -1,45 +1,36 @@
 package com.android.minlib.smarthttp.log;
 
+import android.text.TextUtils;
 import android.util.Log;
 
-import okhttp3.internal.platform.Platform;
+import com.apkfuns.logutils.LogUtils;
 
 public class SmartLog {
 
-    public static void log(String url,String request,String response,Exception e){
-        log("     \n");
-        log("╔════════════════════════════════════════════ Request Start ════════════════════════════════════════════");
-        log("║ URL :" + url);
-        if(request != null || response != null) {
-            log("║──────────────────────────────────────────────────────────────────────────────────────────────");
+    public static void LOG(String url, String request, String response, Exception e){
+        LOG("     \n");
+        LOG("╔════════════════════════════════════════════ Request Start ════════════════════════════════════════════");
+        LOG("║ URL :" + url);
+
+        if(!TextUtils.isEmpty(request)){
+            LOG("║──────────────────────────────────────────── Request ────────────────────────────────────────────");
+            LOG("║ " + request.replace("\n","\n║"));
         }
 
-        if(request != null){
-            log("║ 请求参数 ");
-            log("║ " + request.replace("\n","\n║"));
-            if(response != null) {
-                log("║──────────────────────────────────────────────────────────────────────────────────────────────");
-            }
+        if(!TextUtils.isEmpty(response)){
+            LOG("║──────────────────────────────────────────── Response ────────────────────────────────────────────");
+            LOG("║ " + response.replace("\n","\n║"));
         }
-
-        if(response != null){
-            log("║ 返回数据 ");
-            log("║ " + response.replace("\n","\n║"));
-        }
-
-        log("╚════════════════════════════════════════════ Request End ════════════════════════════════════════════");
-        log("\n");
 
         if(e != null){
-            log("║  ");
-            log("║ 异常信息 ");
-            log("║  ");
-//            log("║ " + e.getStackTrace().toString());
+            LOG("║──────────────────────────────────────────── Error ────────────────────────────────────────────");
             e.printStackTrace();
         }
+        LOG("╚════════════════════════════════════════════ End ════════════════════════════════════════════");
+        LOG("\n");
     }
 
-    private static void log(String message){
+    private static void LOG(String message){
         Log.d("SmartLog",message);
     }
 }
